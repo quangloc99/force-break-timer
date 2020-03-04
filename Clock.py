@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 class TimerClock:
     def __init__(self, duration: timedelta = timedelta(minutes=25)) -> None:
-        self.duration = max(duration, timedelta())
+        self.duration = duration
 
     def get_clock_type(self):
         return 'Timer'
