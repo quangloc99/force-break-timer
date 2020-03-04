@@ -18,6 +18,8 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self.clock = clock
         self._now = now
 
+        self._now_label = Gtk.Label(hexpand=False, halign=Gtk.Align.START)
+
         self._mode_switch_button = Gtk.Button(label="Switch", hexpand=False, halign=Gtk.Align.END)
         self._mode_label = Gtk.Label(hexpand=False, halign=Gtk.Align.START)
 
@@ -33,6 +35,10 @@ class NotifyClockPickerWidget(Gtk.Grid):
         # for easily adding elements
         self._current_row = 0  
         self._current_column = 0
+
+        self._add_elm(Gtk.Label(label = "Now is: ", halign=Gtk.Align.END), 1)
+        self._add_elm(self._now_label, 2)
+        self._new_row()
 
         self._add_elm(Gtk.Label(label = "Mode: ", halign=Gtk.Align.END), 1)
         self._add_elm(self._mode_label, 1)
@@ -84,6 +90,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._update_ui_mode()
 
     def _update_ui(self):
+        self._now_label.set_label("{:0>2}:{:0>2}".format(self._now.hour, self._now.minute))
         self._update_ui_for_alarm()
         self._update_ui_for_timer()
         self._update_ui_mode()
@@ -109,7 +116,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
     def set_now(self, now: datetime = datetime.now()):
         self._now = now
-        self.update_ui()
+        self._update_ui()
 
     def get_timer_clock(self) -> TimerClock:
         return self.clock if isinstance(self.clock, TimerClock) else self.clock.to_timer_clock(self._now)
