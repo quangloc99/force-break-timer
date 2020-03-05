@@ -36,28 +36,36 @@ class TimePickerWidget(Gtk.HBox):
             if self._connected_signals:
                 return
         except AttributeError:
-            self._hours_input.connect('value-changed', self._value_changed_callback)
-            self._minutes_input.connect('value-changed', self._value_changed_callback)
+            self._hours_input.connect('value-changed', self._hours_changed_callback)
+            self._minutes_input.connect('value-changed', self._minutes_changed_callback)
             self._connected_signals = True
 
-    def _value_changed_callback(self, sender):
+    def _hours_changed_callback(self, sender):
+        self.notify('hours')
+        self.emit('changed')
+
+    def _minutes_changed_callback(self, sender):
+        self.notify('minutes')
         self.emit('changed')
         
-    def get_hours(self) -> int:
+    @GObject.Property(type=int)
+    def hours(self) -> int:
         return int(self._hours_input.get_value())
 
-    def get_minutes(self) -> int:
+    @GObject.Property(type=int)
+    def minutes(self) -> int:
         return int(self._minutes_input.get_value())
     
+    @hours.setter
     def set_hours(self, value):
         self._hours_input.set_value(value)
 
+    @minutes.setter
     def set_minutes(self, value):
         self._minutes_input.set_value(value)
 
     def set_hours_and_minutes(self, hours: int, minutes: int):
-        self._hours_input.set_value(hours)
-        self._minutes_input.set_value(minutes)
+        self.hours, self.minutes = hours, minutes
 
     def get_as_datetime(self, now = datetime.now()) -> datetime:
         return now.replace(hour = self.get_hours(), minutes = self.get_minutes())
@@ -65,11 +73,21 @@ class TimePickerWidget(Gtk.HBox):
     def get_as_timedelta(self) -> timedelta:
         return timedelta(hours = self.get_hours(), minutes = self.get_minutes()) 
 
-    def get_as_timer_clock(self) -> TimerClock:
-        return TimerClock(self.get_as_timedelta())
+    @GObject.Property(type=object)
+    def timer_clock(self) -> TimerClock:
+        return TimerClock(self.hours, self.minutes)
+    
+    @GObject.Property(type=object)
+    def alarm_clock(self) -> AlarmClock:
+        return AlarmClock(self.hours, self.minutes)
 
-    def get_as_alarm_clock(self) -> AlarmClock:
-        return AlarmClock(self.get_as_datetim())
+    @timer_clock.setter
+    def set_timer_clock(self, value: TimerClock):
+        self.hours, self.minutes = value.get_hours_and_minutes()
+
+    @alarm_clock.setter
+    def set_alarm_clock(self, value: AlarmClock):
+        self.hours, self.minutes = value.get_hours_and_minutes()
 
     def get_hours_and_minutes(self) -> Tuple[int, int]:
         return self.get_hours(), self.get_minutes()

@@ -74,6 +74,6 @@ class App:
 
 if __name__ == "__main__":
     app = App()
-    app.state.set_clock(TimerClock())
+    app.state.clock = TimerClock()
     Gtk.main()
 

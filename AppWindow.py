@@ -5,7 +5,7 @@ from typing import *
 from datetime import datetime
 
 from AppState import AppState
-from Clock import ClockType
+from Clock import Clock
 from NotifyClockPickerWidget import NotifyClockPickerWidget
 
 class AppWindow(Gtk.Window):
@@ -42,7 +42,7 @@ class AppWindow(Gtk.Window):
         self._clock_picker.connect('picked', self._accept_new_clock)
         self._quit_button.connect('clicked', self._on_quit)
 
-    def _accept_new_clock(self, widget: NotifyClockPickerWidget, clock: ClockType):
+    def _accept_new_clock(self, widget: NotifyClockPickerWidget, clock: Clock):
         print(*clock.get_hours_and_minutes())
 
     def _on_quit(self, *args):

@@ -5,7 +5,7 @@ from typing import *
 from datetime import datetime
 
 from AppState import AppState
-from Clock import ClockType, AlarmClock, TimerClock
+from Clock import Clock, AlarmClock, TimerClock
 
 class ForceBreakIndicatorMenu(Gtk.Menu):
     __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
@@ -35,8 +35,8 @@ class ForceBreakIndicatorMenu(Gtk.Menu):
         self.update_ui()
 
     def update_ui(self):
-        if self._app_state.get_clock() is None:
+        if self._app_state.clock is None:
             self._time_left_item.set_label("Clock is not picked")
         else:
-            self._time_left_item.set_label("Time left: %s" % self._app_state.get_timer_clock())
+            self._time_left_item.set_label("Time left: %s" % self._app_state.timer_clock)
 

@@ -1,25 +1,46 @@
+import gi
+from gi.repository import GObject
+
 from typing import Tuple, Union
 from datetime import datetime, timedelta
 
-class TimerClock:
-    def __init__(self, duration: timedelta = timedelta(minutes=25)) -> None:
-        self.duration = duration
+class Clock(GObject.Object):
+    hours = GObject.Property(type=int)
+    minutes = GObject.Property(type=int)
+    def __init__(self, hours: int = 0, minutes: int = 0):
+        super().__init__()
+        self.hours = hours
+        self.minutes = minutes
 
-    @classmethod
-    def new(cls, hours, minutes):
-        return cls(timedelta(hours = hours, minutes = minutes))
-
-    def get_clock_type(self):
-        return 'Timer'
-
-    def to_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
-        return AlarmClock(now + self.duration)
-
-    def set_hours_and_minutes(self, hours: int, minutes: int):
-        self.duration = timedelta(hours = hours, minutes = minutes)
+    def __str__(self):
+        return "{:0>2}:{:0>2}".format(*self.get_hours_and_minutes())
 
     def get_hours_and_minutes(self) -> Tuple[int, int]:
-        return divmod(self.duration.seconds // 60, 60)
+        return self.hours, self.minutes
+
+    def set_hours_and_minutes(self, hours: int, minutes: int):
+        self.hours, self.minutes = hours, minutes
+
+
+class TimerClock(Clock):
+    clock_type = GObject.Property(type=str, default="Timer")
+
+    def __init__(self, hours: int = 0, minutes: int = 0):
+        super().__init__(hours, minutes)
+
+    @classmethod
+    def new(cls, duration: timedelta):
+        res = TimerClock()
+        res.duration = duration
+        return res
+
+    @GObject.Property(type=object)
+    def duration(self) -> timedelta:
+        return timedelta(hours = self.hours, minutes = self.minutes)
+
+    @duration.setter
+    def set_duration(self, value: timedelta):
+        self.hours, self.minutes = divmod(value.seconds // 60, 60)
 
     def get_time_left(self, now: datetime = datetime.now()) -> timedelta:
         return self.duration
@@ -28,41 +49,34 @@ class TimerClock:
         return self
 
     def as_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
-        return self.to_alarm_clock(now)
+        return AlarmClock.new(now + self.duration)
 
-    def __str__(self):
-        return "{:0>2}:{:0>2}".format(*self.get_hours_and_minutes())
+class AlarmClock(Clock):
+    clock_type = GObject.Property(type=str, default='Alarm')
 
-class AlarmClock:
-    def __init__(self, alarm_time: datetime = datetime.now()) -> None:
-        self.alarm_time = alarm_time
+    def __init__(self, hours: int = 0, minutes: int = 0):
+        super().__init__(hours, minutes)
 
     @classmethod
-    def new(cls, hours: int, minutes: int) -> 'AlarmClock':
-        return cls(datetime.now().replace(hour = hours, minute = minutes))
+    def new(cls, alarm_time: datetime):
+        res = AlarmClock()
+        res.alarm_time = alarm_time
+        return res
 
-    def get_clock_type(self):
-        return 'Alarm'
+    @GObject.Property(type=object)
+    def alarm_time(self):
+        return datetime.now().replace(hour = self.hours, minute = self.minutes)
 
-    def to_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
-        return TimerClock(self.alarm_time - now);
+    @alarm_time.setter
+    def set_alarm_time(self, value: datetime):
+        self.hours, self.minutes = value.hour, value.minute
 
-    def set_hours_and_minutes(self, hours: int, minutes: int):
-        self.alarm_time = self.alarm_time.replace(hour = hours, minute = minutes)
-
-    def get_hours_and_minutes(self) -> Tuple[int, int]:
-        return self.alarm_time.hour, self.alarm_time.minute
-    
-    def get_time_elft(self, now: datetime = datetime.now()) -> timedelta:
+    def get_time_left(self, now: datetime = datetime.now()) -> timedelta:
         return self.alarm_time - now
 
     def as_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
-        return self.to_timer_clock(now)
+        return TimerClock.new(self.alarm_time - now);
 
     def as_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
         return self
 
-    def __str__(self):
-        return "{:0>2}:{:0>2}".format(*self.get_hours_and_minutes())
-
-ClockType = Union[TimerClock, AlarmClock]
