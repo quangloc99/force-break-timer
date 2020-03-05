@@ -21,6 +21,10 @@ Gtk.StyleContext.add_provider_for_screen(
         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 class AppWindow(Gtk.Window):
+    __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
+            "quit": (GObject.SignalFlags.RUN_FIRST, None, tuple())
+    }
+
     def __init__(self, **kwargs):
         super().__init__(title="Force break", **kwargs)
 
@@ -46,29 +50,59 @@ class AppWindow(Gtk.Window):
 
     def _connect_signals(self):
         self._clock_picker.connect('picked', self._accept_new_clock)
-        self._quit_button.connect('clicked', lambda widget: self.close())  # TODO: change this signal handler
+        self._quit_button.connect('clicked', self._on_quit)
 
     def _accept_new_clock(self, widget: NotifyClockPickerWidget, clock: ClockType):
         print(*clock.get_hours_and_minutes())
 
-def main():
-    win = AppWindow()
-    win.connect('destroy', Gtk.main_quit)
-    win.show_all()
+    def _on_quit(self, *args):
+        self.emit("quit")
 
-    # TODO: AppIndicator some how throw the following assertion:
-    # gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
-    # The app is somehow working fine, but this bother me. And because of that this is TODO but not FIXME.
-    indicatorMenu = ForceBreakIndicatorMenu()
-    indicator = AppIndicator3.Indicator.new(
-            "com.github.quangloc99.force_break",
-            "system-run",       # this is just a placeholder
-            AppIndicator3.IndicatorCategory.APPLICATION_STATUS
-    )
-    indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
-    indicator.set_menu(indicatorMenu)
-    Gtk.main()
+# TODO: AppIndicator some how throw the following assertion:
+# gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
+# The app is somehow working fine, but this bother me. And because of that this is TODO but not FIXME.
+class App:
+    def __init__(self):
+        self.win = AppWindow()
+        self.indicator_menu = ForceBreakIndicatorMenu()
+        self.indicator = AppIndicator3.Indicator.new(
+                "com.github.quangloc99.force_break",
+                "system-run",       # this is just a placeholder
+                AppIndicator3.IndicatorCategory.APPLICATION_STATUS
+        )
+
+        self.connect_signals()
+        self.show()
+
+    def connect_signals(self):
+        self.win.connect('quit', self.ask_quit)
+        self.indicator_menu.connect('quit-activated', self.ask_quit)
+
+    def show(self):
+        self.win.show_all()
+        self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+        self.indicator.set_menu(self.indicator_menu) 
+
+    def ask_quit(self, parent, *args):
+        print(parent, args)
+        dialog = Gtk.Dialog(parent = parent if isinstance(parent, Gtk.Window) else None)
+        dialog.get_content_area().set_center_widget(
+            Gtk.Label(label="Do you really want to quit?", margin=10)
+        )
+        dialog.add_button("Yes", 1)
+        dialog.add_button("No", 2)
+        dialog.set_default_response(2)
+        def yes_quit(_, id):
+            if id == 1:
+                Gtk.main_quit()
+            else:
+                dialog.close()
+        dialog.connect('response', yes_quit)
+        dialog.show_all()
+        dialog.run()
 
 if __name__ == "__main__":
-    main()
+    app = App()
+    app.win.fullscreen() 
+    Gtk.main()
 
