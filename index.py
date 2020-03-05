@@ -6,6 +6,7 @@ from gi.repository import Gtk, Gdk, GLib, GObject, AppIndicator3
 from typing import *
 from datetime import datetime
 
+from AppState import AppState
 from Clock import TimerClock
 from ForceBreakIndicatorMenu import ForceBreakIndicatorMenu
 from AppWindow import AppWindow
@@ -29,8 +30,9 @@ Gtk.StyleContext.add_provider_for_screen(
 # The app is somehow working fine, but this bother me. And because of that this is TODO but not FIXME.
 class App:
     def __init__(self):
-        self.win = AppWindow(now = self.get_now())
-        self.indicator_menu = ForceBreakIndicatorMenu(now = self.get_now())
+        self.state = AppState()
+        self.win = AppWindow(app_state = self.state)
+        self.indicator_menu = ForceBreakIndicatorMenu(app_state = self.state)
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",
                 "system-run",       # this is just a placeholder
@@ -43,10 +45,6 @@ class App:
     def connect_signals(self):
         self.win.connect('quit', self.ask_quit)
         self.indicator_menu.connect('quit-activated', self.ask_quit)
-        self.indicator_menu.connect('focus', self.show_indicator_menu)
-
-    def show_indicator_menu(self, *args):
-        self.indicator_menu.set_now(self.get_now())
 
     def show(self):
         self.win.show_all()
@@ -76,6 +74,6 @@ class App:
 
 if __name__ == "__main__":
     app = App()
-    app.indicator_menu.set_clock(TimerClock()) 
+    app.state.set_clock(TimerClock())
     Gtk.main()
 

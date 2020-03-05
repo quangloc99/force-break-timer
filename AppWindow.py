@@ -4,6 +4,7 @@ from gi.repository import Gtk, GObject
 from typing import *
 from datetime import datetime
 
+from AppState import AppState
 from Clock import ClockType
 from NotifyClockPickerWidget import NotifyClockPickerWidget
 
@@ -12,11 +13,12 @@ class AppWindow(Gtk.Window):
             "quit": (GObject.SignalFlags.RUN_FIRST, None, tuple())
     }
 
-    def __init__(self, now: datetime = datetime.now(), **kwargs):
+    def __init__(self, app_state: AppState = AppState(), **kwargs):
         super().__init__(title="Force break", **kwargs)
 
-        self._now = now
-        self._clock_picker = NotifyClockPickerWidget(now = now)
+        self._app_state = app_state
+
+        self._clock_picker = NotifyClockPickerWidget(app_state = app_state)
         self._quit_button = Gtk.Button(label="Quit", halign=Gtk.Align.START)
 
         self._init_layout()
@@ -45,7 +47,3 @@ class AppWindow(Gtk.Window):
 
     def _on_quit(self, *args):
         self.emit("quit")
-
-    def set_now(self, now: datetime = datetime.now()):
-        self._now = now
-        self._clock_picker.set_now(now)

@@ -2,7 +2,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject
 from typing import Tuple, Union, Any, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from Clock import TimerClock, AlarmClock
 
 class TimePickerWidget(Gtk.HBox):
     __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
@@ -57,11 +59,17 @@ class TimePickerWidget(Gtk.HBox):
         self._hours_input.set_value(hours)
         self._minutes_input.set_value(minutes)
 
-    def get_as_datetime(self, now = datetime.now()):
+    def get_as_datetime(self, now = datetime.now()) -> datetime:
         return now.replace(hour = self.get_hours(), minutes = self.get_minutes())
 
-    def get_as_timedelta(self):
-        return timedelta(hour = self.get_hours(), minutes = self.get_minutes()) 
+    def get_as_timedelta(self) -> timedelta:
+        return timedelta(hours = self.get_hours(), minutes = self.get_minutes()) 
+
+    def get_as_timer_clock(self) -> TimerClock:
+        return TimerClock(self.get_as_timedelta())
+
+    def get_as_alarm_clock(self) -> AlarmClock:
+        return AlarmClock(self.get_as_datetim())
 
     def get_hours_and_minutes(self) -> Tuple[int, int]:
         return self.get_hours(), self.get_minutes()

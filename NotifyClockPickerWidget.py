@@ -5,6 +5,7 @@ from gi.repository import Gtk, GObject
 from typing import *
 from datetime import datetime
 
+from AppState import AppState
 from Clock import TimerClock, AlarmClock, ClockType
 from TimePickerWidget import TimePickerWidget
 
@@ -13,11 +14,13 @@ class NotifyClockPickerWidget(Gtk.Grid):
             "picked": (GObject.SignalFlags.RUN_FIRST, None, (object, ))
     }
 
-    def __init__(self, clock: ClockType = TimerClock(), now: datetime = datetime.now(), **kwargs):
+    def __init__(self, app_state: AppState = AppState(), allow_write_app_state = True, **kwargs):
         super().__init__(row_spacing=10, column_spacing=5, **kwargs)
-        self.clock = clock
-        self._now = now
 
+        self.allow_write_app_state = allow_write_app_state
+        self._app_state = app_state
+
+        self._editing_clock = app_state.get_clock()
         self._now_label = Gtk.Label(hexpand=False, halign=Gtk.Align.START)
 
         self._mode_switch_button = Gtk.Button(label="Switch", hexpand=False, halign=Gtk.Align.END)
@@ -28,7 +31,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._set_clock_button= Gtk.Button(label="Set", margin_top=10)
 
         self._init_layout()
-        self._update_ui()
+        self.update_ui()
         self._connect_signals()
 
     def _init_layout(self):
@@ -61,6 +64,10 @@ class NotifyClockPickerWidget(Gtk.Grid):
             self.attach(widget, self._current_column, self._current_row, width, 1)
         self._current_column += width
 
+    def _new_row(self):
+        self._current_row += 1
+        self._current_column = 0
+
     def _connect_signals(self):
         self._mode_switch_button.connect('clicked', self._switch_mode)
         self._timer_picker.connect('changed', self._timer_picker_callback)
@@ -68,59 +75,47 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._set_clock_button.connect('clicked', self._set_clock_button_callback)
 
     def _timer_picker_callback(self, time_picker: TimePickerWidget):
-        if not isinstance(self.clock, TimerClock):
+        if not isinstance(self._editing_clock, TimerClock):
             return 
-        self.clock.set_hours_and_minutes(*time_picker.get_hours_and_minutes())
+        self._editing_clock = time_picker.get_as_timer_clock()
         self._update_ui_for_alarm()
+        if self._allow_write_app_state:
+            self._app_state.set_clock(self._editing_clock)
 
     def _alarm_picker_callback(self, time_picker: TimePickerWidget):
-        if not isinstance(self.clock, AlarmClock):
+        if not isinstance(self._editing_clock, AlarmClock):
             return
-        self.clock.set_hours_and_minutes(*time_picker.get_hours_and_minutes())
+        self._editing_clock = time_picker.get_as_timer_clock()
         self._update_ui_for_timer()
+        if self._allow_write_app_state:
+            self._app_state.set_clock(self._editing_clock)
 
     def _set_clock_button_callback(self, button: Gtk.Button):
         self.emit('picked', self.clock)
 
     def _switch_mode(self, x):
-        if isinstance(self.clock, TimerClock):
-            self.clock = self.clock.to_alarm_clock(self._now)
+        if isinstance(self._editing_clock, TimerClock):
+            self._editing_clock = self._editing_clock.to_alarm_clock(self._app_state.get_now())
         else:
-            self.clock = self.clock.to_timer_clock(self._now)
+            self._editing_clock = self._editing_clock.to_timer_clock(self._app_state.get_now())
         self._update_ui_mode()
 
-    def _update_ui(self):
-        self._now_label.set_label("{:0>2}:{:0>2}".format(self._now.hour, self._now.minute))
+    def update_ui(self):
+        self._now_label.set_label(self._app_state.get_now_str())
         self._update_ui_for_alarm()
         self._update_ui_for_timer()
         self._update_ui_mode()
 
     def _update_ui_for_alarm(self):
-        self._alarm_picker.set_hours_and_minutes(*self.get_alarm_clock().get_hours_and_minutes())
+        alarm_clock = self._editing_clock.as_alarm_clock(self._app_state.get_now())
+        self._alarm_picker.set_hours_and_minutes(*alarm_clock.get_hours_and_minutes())
 
     def _update_ui_for_timer(self):
-        self._timer_picker.set_hours_and_minutes(*self.get_timer_clock().get_hours_and_minutes())
+        timer_clock = self._editing_clock.as_timer_clock(self._app_state.get_now())
+        self._timer_picker.set_hours_and_minutes(*timer_clock.get_hours_and_minutes())
 
     def _update_ui_mode(self):
-        self._alarm_picker.set_sensitive(isinstance(self.clock, AlarmClock))
-        self._timer_picker.set_sensitive(isinstance(self.clock, TimerClock))
-        self._mode_label.set_label(self.clock.get_clock_type())
-
-    def _new_row(self):
-        self._current_row += 1
-        self._current_column = 0
-
-    def update_time(self):
-        now = datetime.now()
-        self.current_time = timedelta(hours=now.hour, minutes=now.minute, seconds=now.second)
-
-    def set_now(self, now: datetime = datetime.now()):
-        self._now = now
-        self._update_ui()
-
-    def get_timer_clock(self) -> TimerClock:
-        return self.clock if isinstance(self.clock, TimerClock) else self.clock.to_timer_clock(self._now)
-
-    def get_alarm_clock(self) -> AlarmClock:
-        return self.clock if isinstance(self.clock, AlarmClock) else self.clock.to_alarm_clock(self._now)
+        self._alarm_picker.set_sensitive(isinstance(self._editing_clock, AlarmClock))
+        self._timer_picker.set_sensitive(isinstance(self._editing_clock, TimerClock))
+        self._mode_label.set_label(self._editing_clock.get_clock_type())
 

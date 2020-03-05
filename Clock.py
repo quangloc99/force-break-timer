@@ -5,6 +5,10 @@ class TimerClock:
     def __init__(self, duration: timedelta = timedelta(minutes=25)) -> None:
         self.duration = duration
 
+    @classmethod
+    def new(cls, hours, minutes):
+        return cls(timedelta(hours = hours, minutes = minutes))
+
     def get_clock_type(self):
         return 'Timer'
 
@@ -32,6 +36,10 @@ class TimerClock:
 class AlarmClock:
     def __init__(self, alarm_time: datetime = datetime.now()) -> None:
         self.alarm_time = alarm_time
+
+    @classmethod
+    def new(cls, hours: int, minutes: int) -> 'AlarmClock':
+        return cls(datetime.now().replace(hour = hours, minute = minutes))
 
     def get_clock_type(self):
         return 'Alarm'
