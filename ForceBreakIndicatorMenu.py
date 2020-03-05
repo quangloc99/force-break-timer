@@ -35,8 +35,8 @@ class ForceBreakIndicatorMenu(Gtk.Menu):
         self.update_ui()
 
     def update_ui(self):
-        if self._app_state.clock is None:
+        if self._app_state.running_clock is None:
             self._time_left_item.set_label("Clock is not picked")
         else:
-            self._time_left_item.set_label("Time left: %s" % self._app_state.timer_clock)
+            self._time_left_item.set_label("Time left: %s" % self._app_state.running_clock)
 
