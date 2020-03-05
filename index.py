@@ -2,8 +2,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
 from gi.repository import Gtk, Gdk, GLib, GObject, AppIndicator3
-from typing import *
 
+from typing import *
+from datetime import datetime
+
+from Clock import TimerClock
 from ForceBreakIndicatorMenu import ForceBreakIndicatorMenu
 from AppWindow import AppWindow
 
@@ -20,12 +23,14 @@ Gtk.StyleContext.add_provider_for_screen(
         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 # TODO: AppIndicator some how throw the following assertion:
-# gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
+#
+#      gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
+#
 # The app is somehow working fine, but this bother me. And because of that this is TODO but not FIXME.
 class App:
     def __init__(self):
-        self.win = AppWindow()
-        self.indicator_menu = ForceBreakIndicatorMenu()
+        self.win = AppWindow(now = self.get_now())
+        self.indicator_menu = ForceBreakIndicatorMenu(now = self.get_now())
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",
                 "system-run",       # this is just a placeholder
@@ -38,6 +43,10 @@ class App:
     def connect_signals(self):
         self.win.connect('quit', self.ask_quit)
         self.indicator_menu.connect('quit-activated', self.ask_quit)
+        self.indicator_menu.connect('focus', self.show_indicator_menu)
+
+    def show_indicator_menu(self, *args):
+        self.indicator_menu.set_now(self.get_now())
 
     def show(self):
         self.win.show_all()
@@ -62,7 +71,11 @@ class App:
         dialog.show_all()
         dialog.run()
 
+    def get_now(self):
+        return datetime.now()
+
 if __name__ == "__main__":
     app = App()
+    app.indicator_menu.set_clock(TimerClock()) 
     Gtk.main()
 
