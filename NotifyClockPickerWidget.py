@@ -69,6 +69,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
     def _connect_signals(self):
         self._app_state.bind_property('now_str', self._now_label, 'label', GObject.BindingFlags.SYNC_CREATE)
+        self._app_state.bind_property('picked_clock_type', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE)
         self._mode_switch_button.connect('clicked', self._switch_mode)
         self._timer_picker.connect('changed', self._timer_picker_callback)
         self._alarm_picker.connect('changed', self._alarm_picker_callback)
@@ -107,5 +108,4 @@ class NotifyClockPickerWidget(Gtk.Grid):
     def _update_ui_mode(self):
         self._alarm_picker.set_sensitive(isinstance(self._app_state.picked_clock, AlarmClock))
         self._timer_picker.set_sensitive(isinstance(self._app_state.picked_clock, TimerClock))
-        self._mode_label.set_label(self._app_state.picked_clock.clock_type)
 

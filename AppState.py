@@ -19,12 +19,17 @@ class AppState(GObject.Object):
     @picked_clock.setter
     def set_picked_clock(self, value):
         self._picked_clock = value
+        self.notify('picked_clock_type')
 
     def switch_picked_clock_mode(self):
         if isinstance(self._picked_clock, TimerClock):
             self.picked_clock = self._picked_clock.as_alarm_clock(self.now)
         else:
             self.picked_clock = self._picked_clock.as_timer_clock(self.now)
+
+    @GObject.Property(type=str)
+    def picked_clock_type(self):
+        return self.picked_clock.clock_type
 
     @GObject.Property(type=object)
     def running_clock(self) -> datetime:
