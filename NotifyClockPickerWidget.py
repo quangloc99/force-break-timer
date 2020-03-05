@@ -57,6 +57,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
         self._add_elm(None, 2)
         self._add_elm(self._set_clock_button, 1)
+        self._new_row()
 
     def _add_elm(self, widget: Optional[Gtk.Widget], width: int):
         if widget is not None:
@@ -68,6 +69,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._current_column = 0
 
     def _connect_signals(self):
+        self._app_state.bind_property('now_str', self._now_label, 'label', GObject.BindingFlags.SYNC_CREATE)
         self._mode_switch_button.connect('clicked', self._switch_mode)
         self._timer_picker.connect('changed', self._timer_picker_callback)
         self._alarm_picker.connect('changed', self._alarm_picker_callback)
@@ -96,7 +98,7 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._update_ui_mode()
 
     def update_ui(self):
-        self._now_label.set_label(self._app_state.get_now_str())
+        # self._now_label.set_label(self._app_state.get_now_str()) 
         self._update_ui_for_alarm()
         self._update_ui_for_timer()
         self._update_ui_mode()

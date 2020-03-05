@@ -75,5 +75,6 @@ class App:
 if __name__ == "__main__":
     app = App()
     app.state.clock = TimerClock()
+    app.state.notify('now')
     Gtk.main()
 

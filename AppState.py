@@ -23,7 +23,8 @@ class AppState(GObject.Object):
     def now(self) -> datetime:
         return datetime.now()
 
-    def get_now_str(self) -> str:
+    @GObject.Property(type=str)
+    def now_str(self) -> str:
         return "{:0>2}:{:0>2}".format(self.now.hour, self.now.minute)
 
     @GObject.Property(type=object)
