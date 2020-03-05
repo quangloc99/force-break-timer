@@ -1,10 +1,12 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GObject
+gi.require_version('AppIndicator3', '0.1')
+from gi.repository import Gtk, Gdk, GLib, GObject, AppIndicator3
 from typing import *
 
 from Clock import ClockType
 from NotifyClockPickerWidget import NotifyClockPickerWidget
+from ForceBreakIndicatorMenu import ForceBreakIndicatorMenu
 
 css = b"""
     .header {
@@ -49,8 +51,24 @@ class AppWindow(Gtk.Window):
     def _accept_new_clock(self, widget: NotifyClockPickerWidget, clock: ClockType):
         print(*clock.get_hours_and_minutes())
 
-win = AppWindow()
-win.connect('destroy', Gtk.main_quit)
-win.show_all()
-Gtk.main()
+def main():
+    win = AppWindow()
+    win.connect('destroy', Gtk.main_quit)
+    win.show_all()
+
+    # TODO: AppIndicator some how throw the following assertion:
+    # gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
+    # The app is somehow working fine, but this bother me. And because of that this is TODO but not FIXME.
+    indicatorMenu = ForceBreakIndicatorMenu()
+    indicator = AppIndicator3.Indicator.new(
+            "com.github.quangloc99.force_break",
+            "system-run",       # this is just a placeholder
+            AppIndicator3.IndicatorCategory.APPLICATION_STATUS
+    )
+    indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+    indicator.set_menu(indicatorMenu)
+    Gtk.main()
+
+if __name__ == "__main__":
+    main()
 
