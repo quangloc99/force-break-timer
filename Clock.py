@@ -12,14 +12,28 @@ class Clock(GObject.Object):
         self.hours = hours
         self.minutes = minutes
 
-    def __str__(self):
-        return "{:0>2}:{:0>2}".format(*self.get_hours_and_minutes())
-
     def get_hours_and_minutes(self) -> Tuple[int, int]:
         return self.hours, self.minutes
 
     def set_hours_and_minutes(self, hours: int, minutes: int):
         self.hours, self.minutes = hours, minutes
+
+    def __eq__(self, other):
+        return self.hours == other.hours and self.minutes == other.minutes
+    
+    # this is python3 but somehow this does not called.
+    # I guess that one of the reasons is GObject
+    def __ne__(self, other): 
+        return not (self == other) 
+
+    def __str__(self):
+        return "{:0>2}:{:0>2}".format(*self.get_hours_and_minutes())
+
+    def make_same_as(self, other):
+        return self.as_alarm_clock() if isinstance(other, AlarmClock) else self.as_timer_clock()
+
+    def to_same_as(self, other, now):
+        return self.to_alarm_clock(now) if isinstance(other, AlarmClock) else self.to_timer_clock(now)
 
 
 class TimerClock(Clock):
@@ -45,11 +59,17 @@ class TimerClock(Clock):
     def get_time_left(self, now: datetime = datetime.now()) -> timedelta:
         return self.duration
 
-    def as_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
+    def to_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
         return self
 
-    def as_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
+    def to_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
         return AlarmClock.new(now + self.duration)
+
+    def as_timer_clock(self):
+        return self
+
+    def as_alarm_clock(self):
+        return AlarmClock(self.hours, self.minutes)
 
 class AlarmClock(Clock):
     clock_type = GObject.Property(type=str, default='Alarm')
@@ -74,9 +94,14 @@ class AlarmClock(Clock):
     def get_time_left(self, now: datetime = datetime.now()) -> timedelta:
         return self.alarm_time - now
 
-    def as_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
+    def to_timer_clock(self, now: datetime = datetime.now()) -> 'TimerClock':
         return TimerClock.new(self.alarm_time - now);
 
-    def as_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
+    def to_alarm_clock(self, now: datetime = datetime.now()) -> 'AlarmClock':
         return self
 
+    def as_timer_clock(self):
+        return TimerClock(self.hours, self.minutes)
+
+    def as_alarm_clock(self):
+        return self

@@ -7,7 +7,7 @@ from typing import *
 from datetime import datetime
 
 from AppState import AppState
-from Clock import TimerClock
+from Clock import TimerClock, AlarmClock
 from ForceBreakIndicatorMenu import ForceBreakIndicatorMenu
 from AppWindow import AppWindow
 
@@ -72,6 +72,7 @@ class App:
     def get_now(self):
         return datetime.now()
 
+print(AlarmClock(1, 2) == AlarmClock(1, 2))
 if __name__ == "__main__":
     app = App()
     app.state.clock = TimerClock()

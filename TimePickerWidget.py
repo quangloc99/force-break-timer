@@ -32,20 +32,19 @@ class TimePickerWidget(Gtk.HBox):
         self.pack_start(Gtk.Label(label=" m  "), False, True, 0)
 
     def _connect_signals(self):
-        try:
-            if self._connected_signals:
-                return
-        except AttributeError:
-            self._hours_input.connect('value-changed', self._hours_changed_callback)
-            self._minutes_input.connect('value-changed', self._minutes_changed_callback)
-            self._connected_signals = True
+        self._hours_input.connect('value-changed', self._hours_changed_callback)
+        self._minutes_input.connect('value-changed', self._minutes_changed_callback)
 
     def _hours_changed_callback(self, sender):
         self.notify('hours')
+        self.notify('timer_clock')
+        self.notify('alarm_clock')
         self.emit('changed')
 
     def _minutes_changed_callback(self, sender):
         self.notify('minutes')
+        self.notify('timer_clock')
+        self.notify('alarm_clock')
         self.emit('changed')
         
     @GObject.Property(type=int)

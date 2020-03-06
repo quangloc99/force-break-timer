@@ -22,19 +22,20 @@ class FullPropertyBinder(GObject.Object):
     def _do_bind(self):
         self.source_obj.connect('notify::' + self.source_prop_name, self._on_source_change)
         if self.flag == GObject.BindingFlags.BIDIRECTIONAL:
+            print('bound dest change')
             self.dest_obj.connect('notify::' + self.dest_prop_name, self._on_dest_change)
 
-        if self.flag == GObject.BindingFlags.SYNC_CREATE:
+        if self.flag in [GObject.BindingFlags.SYNC_CREATE, GObject.BindingFlags.BIDIRECTIONAL]:
             self._on_source_change()
 
     def _on_source_change(self, *args, **kwargs):
         value = self.source_to_dest(self.source_obj.get_property(self.source_prop_name))
-        if value != self.dest_obj.get_property(self.dest_prop_name):
+        if value != self.dest_obj.get_property(self.dest_prop_name): 
             self.dest_obj.set_property(self.dest_prop_name, value)
 
     def _on_dest_change(self, *args, **kwargs):
         value = self.dest_to_source(self.dest_obj.get_property(self.dest_prop_name))
-        if value != self.source_obj.get_property(self.source_prop_name):
+        if value != self.source_obj.get_property(self.source_prop_name): 
             self.source_obj.set_property(self.source_prop_name, value)
 
 def bind_property_full(
