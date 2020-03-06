@@ -39,10 +39,10 @@ class FullPropertyBinder(GObject.Object):
         if not self._bound: return 
         self._bound = False
         if self.source_obj() is not None and self._source_connector_id is not None:
-            self.source_obj().disconnect(self.source_connector_id)
+            self.source_obj().disconnect(self._source_connector_id)
 
         if self.dest_obj() is not None and self._dest_connector_id is not None:
-            self.dest_obj().disconnect(self.dest_connector_id)
+            self.dest_obj().disconnect(self._dest_connector_id)
 
         print("unbound")
 

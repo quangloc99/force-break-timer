@@ -35,6 +35,10 @@ class AppState(GObject.Object):
         print(self._running_clock.to_timer_clock(self._now))
         self.notify('running-clock')
 
+    def remove_running_clock(self):
+        self._running_clock = None
+        self.notify('running-clock')
+
     def reset_now(self):
         self._now = datetime.now()
         self.notify('now')

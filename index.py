@@ -31,38 +31,52 @@ Gtk.StyleContext.add_provider_for_screen(
 class App:
     def __init__(self):
         self.state = AppState()
-        self.win = AppWindow()
-        self.win.connect('clock-picked', print)
         self.indicator_menu = ForceBreakIndicatorMenu()
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",
                 "system-run",       # this is just a placeholder
                 AppIndicator3.IndicatorCategory.APPLICATION_STATUS
         )
+        self.binds_indicator_menu_state(self.indicator_menu)
 
-        self.connect_signals()
-        self.show()
+    def new_app_window(self):
+        win = AppWindow()
+        win.show_all()
+        # win.fullscreen() 
+        win.present()
+        self.binds_window_state(win)
+        return win
 
-    def connect_signals(self):
-        self.state.bind_property('picked_clock', self.win, 'picking_clock', GObject.BindingFlags.BIDIRECTIONAL)
-        self.state.bind_property('now', self.win, 'now', GObject.BindingFlags.SYNC_CREATE)
+    def binds_indicator_menu_state(self, indicator_menu):
+        self.state.bind_property('now', indicator_menu, 'now', GObject.BindingFlags.SYNC_CREATE)
+        self.state.bind_property('running_clock', indicator_menu, 'running_clock', GObject.BindingFlags.SYNC_CREATE)
 
-        self.state.bind_property('now', self.indicator_menu, 'now', GObject.BindingFlags.SYNC_CREATE)
-        self.state.bind_property('running_clock', self.indicator_menu, 'running_clock', GObject.BindingFlags.SYNC_CREATE)
+        indicator_menu.connect('focus', lambda sender, *args: self.state.reset_now())
+        indicator_menu.connect('reset-clock-activated', self.pick_new_clock)
+        indicator_menu.connect('quit-activated', self.ask_quit)
 
-        self.win.connect('quit', self.ask_quit)
-        self.win.connect('clock-picked', lambda sender, clock: self.state.reset_running_clock())
+    def binds_window_state(self, window):
+        self.state.bind_property('picked_clock', window, 'picking_clock', GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        self.state.bind_property('now', window, 'now', GObject.BindingFlags.SYNC_CREATE)
 
-        self.indicator_menu.connect('focus', lambda sender, *args: self.state.reset_now())
-        self.indicator_menu.connect('quit-activated', self.ask_quit)
+        window.connect('quit', self.ask_quit)
+        window.connect('clock-picked', self.reset_running_clock)
+        window.connect('clock-picked', lambda *args: window.close())
 
-    def show(self):
-        self.win.show_all()
+    def reset_running_clock(self, *args):
+        self.state.reset_running_clock()
+        # TODO: run the actual timer
+
+    def pick_new_clock(self, *args):
+        self.state.remove_running_clock()
+        self.new_app_window()
+        # TODO: stop the actual timer
+
+    def show_indicator(self):
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.indicator_menu) 
 
     def ask_quit(self, parent, *args):
-        print(parent, args)
         dialog = Gtk.Dialog(parent = parent if isinstance(parent, Gtk.Window) else None)
         dialog.get_content_area().set_center_widget(
             Gtk.Label(label="Do you really want to quit?", margin=10)
@@ -70,21 +84,14 @@ class App:
         dialog.add_button("Yes", 1)
         dialog.add_button("No", 2)
         dialog.set_default_response(2)
-        def yes_quit(_, id):
-            if id == 1:
-                Gtk.main_quit()
-            else:
-                dialog.close()
-        dialog.connect('response', yes_quit)
         dialog.show_all()
-        dialog.run()
-
-    def get_now(self):
-        return datetime.now()
+        if dialog.run() == 1:
+            Gtk.main_quit()
 
 if __name__ == "__main__":
     app = App()
+    app.show_indicator()
     app.state.picked_clock = TimerClock(minutes=25)
-    app.state.notify('now')
+    app.pick_new_clock()
     Gtk.main()
 
