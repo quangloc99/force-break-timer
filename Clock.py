@@ -71,6 +71,9 @@ class TimerClock(Clock):
     def as_alarm_clock(self):
         return AlarmClock(self.hours, self.minutes)
 
+    def to_compliment(self, now: datetime = datetime.now()):
+        return self.to_alarm_clock(now)
+
 class AlarmClock(Clock):
     clock_type = GObject.Property(type=str, default='Alarm')
 
@@ -105,3 +108,6 @@ class AlarmClock(Clock):
 
     def as_alarm_clock(self):
         return self
+
+    def to_compliment(self, now: datetime = datetime.now()):
+        return self.to_timer_clock(now)

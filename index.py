@@ -31,7 +31,7 @@ Gtk.StyleContext.add_provider_for_screen(
 class App:
     def __init__(self):
         self.state = AppState()
-        self.win = AppWindow(app_state = self.state)
+        self.win = AppWindow()
         self.indicator_menu = ForceBreakIndicatorMenu(app_state = self.state)
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",

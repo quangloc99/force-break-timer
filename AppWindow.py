@@ -13,12 +13,10 @@ class AppWindow(Gtk.Window):
             "quit": (GObject.SignalFlags.RUN_FIRST, None, tuple())
     }
 
-    def __init__(self, app_state: AppState = AppState(), **kwargs):
+    def __init__(self,  **kwargs):
         super().__init__(title="Force break", **kwargs)
 
-        self._app_state = app_state
-
-        self._clock_picker = NotifyClockPickerWidget(app_state = app_state)
+        self._clock_picker = NotifyClockPickerWidget()
         self._set_button = Gtk.Button(label="Set", valign=Gtk.Align.START)
         self._quit_button = Gtk.Button(label="Quit", halign=Gtk.Align.START, valign=Gtk.Align.END)
 

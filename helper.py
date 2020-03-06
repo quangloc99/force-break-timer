@@ -2,6 +2,9 @@ import gi
 from gi.repository import GObject
 
 
+# This is just a simple "polyfill" for GObject.Object#bind_property_full
+# somehow they make this method "unsupported". But this method is 
+# so usefull, I decided to make one.
 # TODO: another functionallity like unbind
 class FullPropertyBinder(GObject.Object):
     def __init__(self, 
