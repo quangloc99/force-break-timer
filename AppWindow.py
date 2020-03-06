@@ -19,7 +19,8 @@ class AppWindow(Gtk.Window):
         self._app_state = app_state
 
         self._clock_picker = NotifyClockPickerWidget(app_state = app_state)
-        self._quit_button = Gtk.Button(label="Quit", halign=Gtk.Align.START)
+        self._set_button = Gtk.Button(label="Set", valign=Gtk.Align.START)
+        self._quit_button = Gtk.Button(label="Quit", halign=Gtk.Align.START, valign=Gtk.Align.END)
 
         self._init_layout()
         self._connect_signals()
@@ -30,16 +31,17 @@ class AppWindow(Gtk.Window):
 
         # If someone reading this code and know how to do this, tell me the other way to center this element.
         # I am using Ubuntu with i3, and I could not found the other way.
-        box1, box2 = Gtk.HBox(), Gtk.VBox()
+        box1, box2 = Gtk.VBox(), Gtk.HBox()
         box1.set_center_widget(self._clock_picker)
         box2.set_center_widget(box1)
         self.add(box2)
 
-        box2.pack_start(header, True, True, 0)
-        box2.pack_end(self._quit_button, False, False, 0)
+        box1.pack_start(header, True, True, 0)
+        box1.pack_end(self._set_button, True, True, 20)
+        box2.pack_start(self._quit_button, False, False, 0)
 
     def _connect_signals(self):
-        self._clock_picker.connect('picked', self._accept_new_clock)
+        self._set_button.connect('clicked', self._accept_new_clock)
         self._quit_button.connect('clicked', self._on_quit)
 
     def _accept_new_clock(self, widget: NotifyClockPickerWidget, clock: Clock):

@@ -27,7 +27,6 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
         self._timer_picker = TimePickerWidget()
         self._alarm_picker = TimePickerWidget()
-        self._set_clock_button= Gtk.Button(label="Set", margin_top=10)
 
         self._init_layout()
         self._connect_signals()
@@ -52,10 +51,6 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
         self._add_elm(Gtk.Label(label = "Notify at: ", halign=Gtk.Align.END), 1)
         self._add_elm(self._alarm_picker, 2)
-        self._new_row()
-
-        self._add_elm(None, 2)
-        self._add_elm(self._set_clock_button, 1)
         self._new_row()
 
     def _add_elm(self, widget: Optional[Gtk.Widget], width: int):
@@ -85,7 +80,6 @@ class NotifyClockPickerWidget(Gtk.Grid):
                 lambda timer_clock: timer_clock.to_same_as(self._app_state.picked_clock, self._app_state.now))
 
         self._mode_switch_button.connect('clicked', self._switch_mode)
-        self._set_clock_button.connect('clicked', self._set_clock_button_callback)
 
     def _set_clock_button_callback(self, button: Gtk.Button):
         self.emit('picked', self._editing_clock)
