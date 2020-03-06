@@ -9,6 +9,7 @@ from Clock import Clock, AlarmClock, TimerClock
 
 class ForceBreakIndicatorMenu(Gtk.Menu):
     __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
+            "reset-clock-activated": (GObject.SignalFlags.RUN_FIRST, None, tuple()), 
             "quit-activated": (GObject.SignalFlags.RUN_FIRST, None, tuple()),
     }
 
@@ -23,19 +24,25 @@ class ForceBreakIndicatorMenu(Gtk.Menu):
 
         self._time_left_item = Gtk.MenuItem(sensitive=False)
         self._alarm_at_item = Gtk.MenuItem(sensitive=False)
+        self._reset_clock_item = Gtk.MenuItem(label="Reset clock")
         self._quit_item = Gtk.MenuItem(label="Quit")
 
         self.add(self._time_left_item)
         self.add(self._alarm_at_item)
+        self.add(self._reset_clock_item)
         self.add(self._quit_item)
         self._connect_signals()
         self.show_all()
 
     def _connect_signals(self):
+        self._reset_clock_item.connect("activate", self._on_reset_clock)
         self._quit_item.connect("activate", self._on_quit)
 
         self.connect("notify::now", self._update_clock_labels)
         self.connect("notify::running-clock", self._update_clock_labels)
+
+    def _on_reset_clock(self, widget):
+        self.emit("reset-clock-activated")
 
     def _on_quit(self, widget):
         self.emit("quit-activated")
