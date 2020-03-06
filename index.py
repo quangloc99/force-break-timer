@@ -32,6 +32,7 @@ class App:
     def __init__(self):
         self.state = AppState()
         self.win = AppWindow()
+        self.win.connect('clock-picked', print)
         self.indicator_menu = ForceBreakIndicatorMenu(app_state = self.state)
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",
@@ -45,6 +46,9 @@ class App:
     def connect_signals(self):
         self.win.connect('quit', self.ask_quit)
         self.indicator_menu.connect('quit-activated', self.ask_quit)
+
+        self.state.bind_property('picked_clock', self.win, 'picking_clock', GObject.BindingFlags.DEFAULT)
+        self.state.bind_property('now', self.win, 'now', GObject.BindingFlags.SYNC_CREATE)
 
     def show(self):
         self.win.show_all()
@@ -72,10 +76,9 @@ class App:
     def get_now(self):
         return datetime.now()
 
-print(AlarmClock(1, 2) == AlarmClock(1, 2))
 if __name__ == "__main__":
     app = App()
-    app.state.picked_clock = TimerClock(minutes=25)
+    app.state.picked_clock = AlarmClock(minutes=25)
     app.state.notify('now')
     Gtk.main()
 
