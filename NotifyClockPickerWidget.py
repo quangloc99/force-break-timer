@@ -8,6 +8,7 @@ from datetime import datetime
 from AppState import AppState
 from Clock import TimerClock, AlarmClock
 from TimePickerWidget import TimePickerWidget
+from helper import bind_property_full
 
 class NotifyClockPickerWidget(Gtk.Grid):
     __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
@@ -69,7 +70,10 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
     def _connect_signals(self):
         self._app_state.bind_property('now_str', self._now_label, 'label', GObject.BindingFlags.SYNC_CREATE)
-        self._app_state.bind_property('picked_clock_type', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE)
+        # self._app_state.bind_property('picked_clock_type', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE) 
+        bind_property_full(self._app_state, 'picked-clock', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE,
+                lambda clock: clock.clock_type)
+        # self._app_state.bind_property_full('picked_clock', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE, None, None) 
         self._mode_switch_button.connect('clicked', self._switch_mode)
         self._timer_picker.connect('changed', self._timer_picker_callback)
         self._alarm_picker.connect('changed', self._alarm_picker_callback)
