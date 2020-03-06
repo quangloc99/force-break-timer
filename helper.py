@@ -13,33 +13,48 @@ class FullPropertyBinder(GObject.Object):
         dest_to_source = None
     ):
         super().__init__()
-        self.source_obj = source_obj
-        self.dest_obj = dest_obj
+        self.source_obj = source_obj.weak_ref(self.unbind)
+        self.dest_obj = dest_obj.weak_ref(self.unbind)
         self.source_prop_name = src_prop_name
         self.dest_prop_name = dest_prop_name
         self.source_to_dest = source_to_dest
         self.dest_to_source = dest_to_source
         self.flag = flag
+        self._bound = False
+        self._source_connector_id = None
+        self._dest_connector_id = None
         self._do_bind()
 
     def _do_bind(self):
-        self.source_obj.connect('notify::' + self.source_prop_name, self._on_source_change)
+        assert(not self._bound)
+        self._source_connector_id = self.source_obj().connect('notify::' + self.source_prop_name, self._on_source_change)
         if self.flag == GObject.BindingFlags.BIDIRECTIONAL:
-            print('bound dest change')
-            self.dest_obj.connect('notify::' + self.dest_prop_name, self._on_dest_change)
+            self._dest_connector_id = self.dest_obj().connect('notify::' + self.dest_prop_name, self._on_dest_change)
 
-        if self.flag in [GObject.BindingFlags.SYNC_CREATE, GObject.BindingFlags.BIDIRECTIONAL]:
+        if (self.flag & GObject.BindingFlags.SYNC_CREATE) > 0:
             self._on_source_change()
+        self._bound = True
+
+    def unbind(self):
+        if not self._bound: return 
+        self._bound = False
+        if self.source_obj() is not None and self._source_connector_id is not None:
+            self.source_obj().disconnect(self.source_connector_id)
+
+        if self.dest_obj() is not None and self._dest_connector_id is not None:
+            self.dest_obj().disconnect(self.dest_connector_id)
+
+        print("unbound")
 
     def _on_source_change(self, *args, **kwargs):
-        value = self.source_to_dest(self.source_obj.get_property(self.source_prop_name))
-        if value != self.dest_obj.get_property(self.dest_prop_name): 
-            self.dest_obj.set_property(self.dest_prop_name, value)
+        value = self.source_to_dest(self.source_obj().get_property(self.source_prop_name))
+        if value != self.dest_obj().get_property(self.dest_prop_name): 
+            self.dest_obj().set_property(self.dest_prop_name, value)
 
     def _on_dest_change(self, *args, **kwargs):
-        value = self.dest_to_source(self.dest_obj.get_property(self.dest_prop_name))
-        if value != self.source_obj.get_property(self.source_prop_name): 
-            self.source_obj.set_property(self.source_prop_name, value)
+        value = self.dest_to_source(self.dest_obj().get_property(self.dest_prop_name))
+        if value != self.source_obj().get_property(self.source_prop_name): 
+            self.source_obj().set_property(self.source_prop_name, value)
 
 def bind_property_full(
         source_obj, src_prop_name, dest_obj, dest_prop_name, flag, 
