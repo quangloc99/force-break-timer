@@ -77,11 +77,11 @@ class NotifyClockPickerWidget(Gtk.Grid):
                 lambda clock: isinstance(clock, TimerClock)) 
 
         bind_property_full(self, 'picking-clock', self._alarm_picker, 'alarm-clock', GObject.BindingFlags.BIDIRECTIONAL,   
-                lambda clock: clock.to_alarm_clock(self.now),   
-                lambda alarm_clock: alarm_clock.to_same_as(self.picking_clock, self.now))   
+                lambda clock: clock.to_alarm_clock(self.now), self._from_picker_to_clock)
         bind_property_full(self, 'picking-clock', self._timer_picker, 'timer-clock', GObject.BindingFlags.BIDIRECTIONAL, 
-                lambda clock: clock.to_timer_clock(self.now), 
-                lambda timer_clock: timer_clock.to_same_as(self.picking_clock, self.now))
+                lambda clock: clock.to_timer_clock(self.now), self._from_picker_to_clock)
+
+        self.connect('notify::now', self._on_now_changed)
 
         self._mode_switch_button.connect('clicked', self._switch_mode)
 
@@ -89,3 +89,10 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self.picking_clock = self.picking_clock.to_compliment(self.now)
         self.emit('switched')
 
+    def _from_picker_to_clock(self, clock):
+        if not isinstance(clock, self.picking_clock.__class__):
+            return self.picking_clock
+        return clock
+
+    def _on_now_changed(self, *args):
+        self.notify('picking-clock')
