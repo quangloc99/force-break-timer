@@ -22,9 +22,11 @@ class ForceBreakIndicatorMenu(Gtk.Menu):
         self.running_clock = running_clock
 
         self._time_left_item = Gtk.MenuItem(sensitive=False)
+        self._alarm_at_item = Gtk.MenuItem(sensitive=False)
         self._quit_item = Gtk.MenuItem(label="Quit")
 
         self.add(self._time_left_item)
+        self.add(self._alarm_at_item)
         self.add(self._quit_item)
         self._connect_signals()
         self.show_all()
@@ -41,7 +43,10 @@ class ForceBreakIndicatorMenu(Gtk.Menu):
     def _update_clock_labels(self, *args):
         if self.running_clock is None:
             self._time_left_item.set_label("Clock is not picked")
+            self._alarm_at_item.set_label("")
         else:
             self._time_left_item.set_label("Time left: %s" % 
                     self.running_clock.to_timer_clock(self.now))
+            self._alarm_at_item.set_label("Alarm at: %s" %
+                    self.running_clock.to_alarm_clock(self.now))
 
