@@ -59,9 +59,14 @@ class AppWindow(Gtk.Window):
         self._set_button.connect('clicked', self._accept_new_clock)
         self._quit_button.connect('clicked', self._on_quit)
 
+        self._clock_picker.connect('notify::picking-clock', self._on_picking_clock_changed)
+
     def _accept_new_clock(self, widget):
         self.emit('clock-picked', self.picking_clock)
 
     def _on_quit(self, *args):
         self.emit("quit")
+
+    def _on_picking_clock_changed(self, *args):
+        self.notify('picking-clock')
 

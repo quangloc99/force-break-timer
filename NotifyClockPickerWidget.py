@@ -15,11 +15,14 @@ class NotifyClockPickerWidget(Gtk.Grid):
             "switched": (GObject.SignalFlags.RUN_FIRST, None, ())
     }
 
+    now = GObject.Property()
+    picking_clock = GObject.Property()
+
     def __init__(self, now = datetime.now(), picking_clock = TimerClock(), **kwargs):
         super().__init__(row_spacing=10, column_spacing=5, **kwargs)
 
-        self._now = now
-        self._picking_clock = picking_clock
+        self.now = now
+        self.picking_clock = picking_clock
 
         self._now_label = Gtk.Label(hexpand=False, halign=Gtk.Align.START)
 
@@ -31,22 +34,6 @@ class NotifyClockPickerWidget(Gtk.Grid):
 
         self._init_layout()
         self._connect_signals()
-
-    @GObject.Property
-    def picking_clock(self):
-        return self._picking_clock
-
-    @GObject.Property
-    def now(self):
-        return self._now
-
-    @picking_clock.setter
-    def set_picking_clock(self, value):
-        self._picking_clock = value
-
-    @now.setter
-    def set_now(self, value):
-        self._now = value
 
     def _init_layout(self):
         # for easily adding elements
@@ -90,15 +77,15 @@ class NotifyClockPickerWidget(Gtk.Grid):
                 lambda clock: isinstance(clock, TimerClock)) 
 
         bind_property_full(self, 'picking-clock', self._alarm_picker, 'alarm-clock', GObject.BindingFlags.BIDIRECTIONAL,   
-                lambda clock: clock.to_alarm_clock(self._now),   
-                lambda alarm_clock: alarm_clock.to_same_as(self.picking_clock, self._now))   
+                lambda clock: clock.to_alarm_clock(self.now),   
+                lambda alarm_clock: alarm_clock.to_same_as(self.picking_clock, self.now))   
         bind_property_full(self, 'picking-clock', self._timer_picker, 'timer-clock', GObject.BindingFlags.BIDIRECTIONAL, 
-                lambda clock: clock.to_timer_clock(self._now), 
-                lambda timer_clock: timer_clock.to_same_as(self._picking_clock, self._now))
+                lambda clock: clock.to_timer_clock(self.now), 
+                lambda timer_clock: timer_clock.to_same_as(self.picking_clock, self.now))
 
         self._mode_switch_button.connect('clicked', self._switch_mode)
 
     def _switch_mode(self, x):
-        self.picking_clock = self._picking_clock.to_compliment(self._now)
+        self.picking_clock = self.picking_clock.to_compliment(self.now)
         self.emit('switched')
 

@@ -9,34 +9,39 @@ from Clock import Clock, AlarmClock, TimerClock
 
 class ForceBreakIndicatorMenu(Gtk.Menu):
     __gsignals__: Dict[str, Tuple[Any, Any, Any]] = {
-            "quit-activated": (GObject.SignalFlags.RUN_FIRST, None, tuple())
+            "quit-activated": (GObject.SignalFlags.RUN_FIRST, None, tuple()),
     }
-    def __init__(self, app_state = AppState()):
+
+    now = GObject.Property()
+    running_clock = GObject.Property()
+
+    def __init__(self, now = datetime.now(), running_clock = AlarmClock()):
         super().__init__()
-        self._app_state = app_state
+
+        self.now = now
+        self.running_clock = running_clock
 
         self._time_left_item = Gtk.MenuItem(sensitive=False)
         self._quit_item = Gtk.MenuItem(label="Quit")
 
         self.add(self._time_left_item)
         self.add(self._quit_item)
-        self.update_ui()
         self._connect_signals()
         self.show_all()
 
     def _connect_signals(self):
         self._quit_item.connect("activate", self._on_quit)
-        self.connect('focus', self._on_focus)
+
+        self.connect("notify::now", self._update_clock_labels)
+        self.connect("notify::running-clock", self._update_clock_labels)
 
     def _on_quit(self, widget):
         self.emit("quit-activated")
 
-    def _on_focus(self, *args):
-        self.update_ui()
-
-    def update_ui(self):
-        if self._app_state.running_clock is None:
+    def _update_clock_labels(self, *args):
+        if self.running_clock is None:
             self._time_left_item.set_label("Clock is not picked")
         else:
-            self._time_left_item.set_label("Time left: %s" % self._app_state.running_clock)
+            self._time_left_item.set_label("Time left: %s" % 
+                    self.running_clock.to_timer_clock(self.now))
 

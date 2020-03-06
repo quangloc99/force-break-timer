@@ -33,7 +33,7 @@ class App:
         self.state = AppState()
         self.win = AppWindow()
         self.win.connect('clock-picked', print)
-        self.indicator_menu = ForceBreakIndicatorMenu(app_state = self.state)
+        self.indicator_menu = ForceBreakIndicatorMenu()
         self.indicator = AppIndicator3.Indicator.new(
                 "com.github.quangloc99.force_break",
                 "system-run",       # this is just a placeholder
@@ -44,11 +44,17 @@ class App:
         self.show()
 
     def connect_signals(self):
-        self.win.connect('quit', self.ask_quit)
-        self.indicator_menu.connect('quit-activated', self.ask_quit)
-
-        self.state.bind_property('picked_clock', self.win, 'picking_clock', GObject.BindingFlags.DEFAULT)
+        self.state.bind_property('picked_clock', self.win, 'picking_clock', GObject.BindingFlags.BIDIRECTIONAL)
         self.state.bind_property('now', self.win, 'now', GObject.BindingFlags.SYNC_CREATE)
+
+        self.state.bind_property('now', self.indicator_menu, 'now', GObject.BindingFlags.SYNC_CREATE)
+        self.state.bind_property('running_clock', self.indicator_menu, 'running_clock', GObject.BindingFlags.SYNC_CREATE)
+
+        self.win.connect('quit', self.ask_quit)
+        self.win.connect('clock-picked', lambda sender, clock: self.state.reset_running_clock())
+
+        self.indicator_menu.connect('focus', lambda sender, *args: self.state.reset_now())
+        self.indicator_menu.connect('quit-activated', self.ask_quit)
 
     def show(self):
         self.win.show_all()
@@ -78,7 +84,7 @@ class App:
 
 if __name__ == "__main__":
     app = App()
-    app.state.picked_clock = AlarmClock(minutes=25)
+    app.state.picked_clock = TimerClock(minutes=25)
     app.state.notify('now')
     Gtk.main()
 
