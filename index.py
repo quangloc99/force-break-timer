@@ -75,7 +75,7 @@ class App:
 print(AlarmClock(1, 2) == AlarmClock(1, 2))
 if __name__ == "__main__":
     app = App()
-    app.state.clock = TimerClock()
+    app.state.picked_clock = TimerClock(minutes=25)
     app.state.notify('now')
     Gtk.main()
 

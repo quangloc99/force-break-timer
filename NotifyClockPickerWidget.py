@@ -68,7 +68,8 @@ class NotifyClockPickerWidget(Gtk.Grid):
         self._current_column = 0
 
     def _connect_signals(self):
-        self._app_state.bind_property('now_str', self._now_label, 'label', GObject.BindingFlags.SYNC_CREATE)
+        bind_property_full(self._app_state, 'now', self._now_label, 'label', GObject.BindingFlags.SYNC_CREATE,
+                lambda now: "{:0>2}:{:0>2}".format(now.hour, now.minute))
         bind_property_full(self._app_state, 'picked-clock', self._mode_label, 'label', GObject.BindingFlags.SYNC_CREATE,
                 lambda clock: clock.clock_type)
         bind_property_full(self._app_state, 'picked-clock', self._alarm_picker, 'sensitive', GObject.BindingFlags.SYNC_CREATE, 
