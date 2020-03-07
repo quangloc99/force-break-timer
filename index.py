@@ -39,6 +39,12 @@ class App:
         )
         self.binds_indicator_menu_state(self.indicator_menu)
 
+    def update_now_periodically(self, interval_ms: int = 500):
+        def timeout_callback():
+            self.state.reset_now()
+            return True
+        return GLib.timeout_add(interval_ms, timeout_callback)
+
     def new_app_window(self):
         win = AppWindow()
         self.binds_window_state(win)
@@ -48,7 +54,6 @@ class App:
         self.state.bind_property('now', indicator_menu, 'now', GObject.BindingFlags.SYNC_CREATE)
         self.state.bind_property('running_clock', indicator_menu, 'running_clock', GObject.BindingFlags.SYNC_CREATE)
 
-        indicator_menu.connect('focus', lambda sender, *args: self.state.reset_now())
         indicator_menu.connect('reset-clock-activated', self.pick_new_clock)
         indicator_menu.connect('quit-activated', self.ask_quit)
 
@@ -95,5 +100,6 @@ if __name__ == "__main__":
     app.show_indicator()
     app.state.picked_clock = TimerClock(minutes=25)
     app.pick_new_clock()
+    app.update_now_periodically(500)
     Gtk.main()
 
