@@ -41,9 +41,6 @@ class App:
 
     def new_app_window(self):
         win = AppWindow()
-        win.show_all()
-        # win.fullscreen() 
-        win.present()
         self.binds_window_state(win)
         return win
 
@@ -69,7 +66,10 @@ class App:
 
     def pick_new_clock(self, *args):
         self.state.remove_running_clock()
-        self.new_app_window()
+        win = self.new_app_window()
+        win.show_all()
+        # win.fullscreen() 
+        win.present()
         # TODO: stop the actual timer
 
     def show_indicator(self):
@@ -87,6 +87,8 @@ class App:
         dialog.show_all()
         if dialog.run() == 1:
             Gtk.main_quit()
+        else:
+            dialog.close()
 
 if __name__ == "__main__":
     app = App()

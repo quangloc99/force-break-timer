@@ -44,8 +44,6 @@ class FullPropertyBinder(GObject.Object):
         if self.dest_obj() is not None and self._dest_connector_id is not None:
             self.dest_obj().disconnect(self._dest_connector_id)
 
-        print("unbound")
-
     def _on_source_change(self, *args, **kwargs):
         value = self.source_to_dest(self.source_obj().get_property(self.source_prop_name))
         if value != self.dest_obj().get_property(self.dest_prop_name): 
