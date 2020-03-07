@@ -31,8 +31,6 @@ class AppState(GObject.Object):
 
     def reset_running_clock(self):
         self._running_clock = self._picked_clock.to_alarm_clock(self._now)
-        print(self._running_clock)
-        print(self._running_clock.to_timer_clock(self._now))
         self.notify('running-clock')
 
     def remove_running_clock(self):

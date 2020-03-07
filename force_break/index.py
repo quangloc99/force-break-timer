@@ -1,9 +1,11 @@
+#!/usr/bin/env python3
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('Notify', '0.7')
 from gi.repository import Gtk, Gdk, GLib, GObject, AppIndicator3, Notify
 
+import atexit
 from typing import *
 from datetime import datetime, timedelta
 from functools import partial
@@ -43,6 +45,8 @@ def finalize():
     Notify.uninit()
     Gtk.main_quit()
 
+atexit.register(finalize)
+
 # TODO: AppIndicator some how throw the following assertion:
 #
 #      gdk_window_thaw_toplevel_updates: assertion 'window->update_and_descendants_freeze_count > 0' failed
@@ -65,6 +69,8 @@ class App:
         self.binds_indicator_menu_state(self.indicator_menu)
         self.alarm_timeline = None
         self.__countdown_notify = Notify.Notification.new("")
+        self.__countdown_notify.set_urgency(Notify.Urgency.CRITICAL)
+        self.__countdown_notify.set_timeout(3000)
 
     def update_now_periodically(self, interval_ms: int = 500):
         def timeout_callback():
@@ -98,6 +104,10 @@ class App:
         self.ui_state = UI_STATE.RUNNING_CLOCK
         self.state.reset_running_clock()
         clock = self.state.running_clock.to_timer_clock(self.state.now)
+        self.reset_and_show_notify("Timer is set.", "Count down {}.\nNotify at {}".format(
+            clock.to_timer_clock(self.state.now),
+            clock.to_alarm_clock(self.state.now)
+        ))
         self.alarm_timeline = Timeline(self.generate_alarm_timeline(clock.duration))
         self.alarm_timeline.start()
 
@@ -127,12 +137,12 @@ class App:
                 break
             duration -= one_sec
             res.append(1000)
-            res.append(partial(self.reset_and_show_countdown_notify, "Timer ends in " + str(countdown)))
+            res.append(partial(self.reset_and_show_notify, "Timer ends in " + str(countdown)))
         res.append(int(duration.total_seconds() * 1000))
         return reversed(res)
         
-    def reset_and_show_countdown_notify(self, summary):
-        self.__countdown_notify.update(summary)
+    def reset_and_show_notify(self, summary, body = None):
+        self.__countdown_notify.update(summary, body)
         self.__countdown_notify.show()
 
     def ask_quit(self, parent, *args):
