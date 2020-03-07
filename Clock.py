@@ -87,7 +87,7 @@ class AlarmClock(Clock):
     clock_type = GObject.Property(type=str, default='Alarm')
 
     def __init__(self, hours: int = 0, minutes: int = 0, seconds: int = 0):
-        super().__init__(hours, minutes)
+        super().__init__(hours, minutes, seconds)
 
     @classmethod
     def new(cls, alarm_time: datetime):
